@@ -10,6 +10,8 @@ def main():
 
     load_dotenv()
 
+    print(f"token: {os.getenv('token')}")
+
     slack = Slack(SlackWebClient(token=os.getenv("token")))
     print(slack.get_receivers())
     channels = slack.get_receiver_names()

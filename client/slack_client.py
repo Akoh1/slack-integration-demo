@@ -17,11 +17,11 @@ class SlackClient(ABC):
         pass
 
     @abstractmethod
-    def conversation_open(self):
+    def conversation_open(self, receivers: list):
         pass
 
     @abstractmethod
-    def chat_message(self):
+    def chat_message(self, channel: str, message: str):
         pass
 
 
@@ -48,32 +48,22 @@ class SlackWebClient(SlackClient):
 
             return False
 
-    def conversation_open(self):
-        pass
+    def conversation_open(self, receivers: list):
+        """Open a conversation with a user."""
 
-    def chat_message(self):
-        pass
+        try:
+            response = self.client.conversations_open(return_im=True, users=receivers)
+            return response
+        except SlackApiError as e:
+            _logger.info(f"Error opening conversation with users {receivers}: {e}")
 
-    # def webclient_post_message(self, channel: str, message: str):
-    #     try:
-    #         response = self.web_client.chat_postMessage(channel=channel, text=message)
-    #         return response
-    #     except SlackApiError as e:
-    #         _logger.info(f"Error sending message to channel {channel}: {e}")
-    #         if self.record:
-    #             self.record.ihub_error(e)
-    #         return e
+            return False
 
-    # def webclient_open_conversation(self, users: list, return_im=True):
-    #     """Open a conversation with a user."""
+    def chat_message(self, channel, message):
+        try:
+            response = self.client.chat_postMessage(channel=channel, text=message)
+            return response
+        except SlackApiError as e:
+            _logger.info(f"Error sending message to channel {channel}: {e}")
 
-    #     try:
-    #         response = self.web_client.conversations_open(
-    #             return_im=return_im, users=users
-    #         )
-    #         return response
-    #     except SlackApiError as e:
-    #         _logger.info(f"Error opening conversation with users {users}: {e}")
-    #         if self.record:
-    #             self.record.ihub_error(e)
-    #         return e
+            return False

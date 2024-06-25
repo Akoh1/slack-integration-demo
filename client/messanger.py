@@ -3,12 +3,16 @@ from .slack_client import SlackClient
 
 
 class Messenger(ABC):
+    """Interface for other message types to implement"""
+
     @abstractmethod
     def get_receivers(self):
+        """Get list of receivers Data"""
         pass
 
     @abstractmethod
-    def get_receiver_names(self):
+    def get_receiver_names(self) -> list:
+        """Get List of receivers name"""
         pass
 
     @abstractmethod
@@ -34,7 +38,7 @@ class Slack(Messenger):
 
         self.receivers = receivers
 
-    def get_receiver_names(self):
+    def get_receiver_names(self) -> list:
         names = []
         for items in self.receivers:
             names.append(items.get("name"))
@@ -43,32 +47,20 @@ class Slack(Messenger):
 
     def post_message(self, receiver: str, message: str):
         # Get receiver and check if channel or not to determine were to send message
-        print(f"receiver: {receiver}")
-        print(f"message: {message}")
+
         receiver_data = [
             data for data in self.receivers if data.get("name") == receiver
         ]
         if receiver_data:
             receiver_item = receiver_data[0]
-        return receiver_data
-
-    # def send_message(self, channel, message, record=None):
-    #     """
-    #     Send message to slack channel
-    #     """
-    #     slack = SlackClientAPI(self.slack_token, self, record)
-    #     markdown = self.convert_html_to_markdown(message)
-    #     response = slack.webclient_post_message(channel, markdown)
-    #     return response
-
-    # def user_direct_message(self, users: list, message, record=None):
-    #     """
-    #     Send a direct message to a user
-    #     """
-    #     slack = SlackClientAPI(self.slack_token, self, record)
-    #     response = slack.webclient_open_conversation(users=users)
-    #     if response:
-    #         channel = response["channel"]["id"]
-    #         markdown = self.convert_html_to_markdown(message)
-    #         response = slack.webclient_post_message(channel, markdown)
-    #     return response
+            if receiver_item.get("is_channel") is True:
+                channel = receiver_item.get("id")
+                self.client.chat_message(channel, message)
+            else:
+                print(f"rec id: {receiver_item.get('id')}")
+                receiver_id = receiver_item.get("id").split()
+                response = self.client.conversation_open(receivers=receiver_id)
+                if response:
+                    channel = response["channel"]["id"]
+                    self.client.chat_message(channel, message)
+        return True
